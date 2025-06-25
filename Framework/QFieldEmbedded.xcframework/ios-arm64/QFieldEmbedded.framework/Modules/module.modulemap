@@ -1,0 +1,6 @@
+framework module QFieldEmbedded {
+  umbrella header "QFieldEmbedded.h"
+
+  export *
+  module * { export * }
+}
