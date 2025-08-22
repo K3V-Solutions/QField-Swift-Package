@@ -19,7 +19,7 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .binaryTarget(
             name: "QFieldEmbedded",
-            url: "https://github.com/K3V-Solutions/QField-Swift-Package/releases/download/0.0.2/QFieldEmbedded.xcframework.zip",
+            url: "https://github.com/K3V-Solutions/QField-Swift-Package/releases/download/0.0.3/QFieldEmbedded.xcframework.zip",
             checksum: "42e90312a3aac27eb590e7f3c721368ceb4a4351be5dc24c2a444f756b479f1e"
         ),
         
