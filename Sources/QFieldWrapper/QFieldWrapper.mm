@@ -22,39 +22,44 @@
         NSLog(@"argv[%d]: %s", i, argv[i]);
     }
     
-    return runQFieldEmbedded(1, argv);
+    return qfe::run(1, argv);
 }
 
 - (int)loadProject:(nonnull NSString *)path zoomToProject:(BOOL)zoom absolutePath:(BOOL)absolute {
-    return QfeProject(path.UTF8String, zoom, absolute);
+    const char *cpath = [path fileSystemRepresentation];
+    return qfe::project(cpath, zoom, absolute);
 }
 
 - (int)bootQField {
-    return bootQFieldEmbedded();
+    return qfe::boot(true);
+}
+
+- (int)widget:(UIView *)nativeController {
+    qfe::widget(nativeController);
 }
 
 - (void)zoomIn {
-    QfeZoomIn();
+    qfe::zoomIn();
 }
 
 - (void)zoomOut {
-    QfeZoomOut();
+    qfe::zoomOut();
 }
 
 - (void)moveUp {
-    QfeMoveUp();
+    qfe::moveUp();
 }
 
 - (void)moveDown {
-    QfeMoveDown();
+    qfe::moveDown();
 }
 
 - (void)moveLeft {
-    QfeMoveLeft();
+    qfe::moveLeft();
 }
 
 - (void)moveRight {
-    QfeMoveRight();
+    qfe::moveRight();
 }
 
 @end

@@ -7,6 +7,7 @@
 
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -14,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (int) bootQField;
 - (int) runQField;
+- (int) widget:(UIView *)nativeController;
 - (int) loadProject:(NSString *)path zoomToProject:(BOOL)zoom absolutePath:(BOOL)absolute;
 - (void) zoomIn;
 - (void) zoomOut;
