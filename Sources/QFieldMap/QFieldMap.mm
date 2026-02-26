@@ -8,25 +8,23 @@
 
 #import <Foundation/Foundation.h>
 #import <QFieldEmbedded/QFieldEmbedded.h>
-#import "QFieldWrapper.h"
+#import "QFieldMap.h"
 #import <vector>
+#import <fstream>
 
-@implementation QFieldWrapper : NSObject
+@implementation QFieldMap : NSObject
 
 - (int)runQField {
     NSString *executablePath = NSBundle.mainBundle.executablePath;
     char *argv[] = {(char *)[executablePath fileSystemRepresentation]};
-    
-    int argc = sizeof(argv) / sizeof(argv[0]);
-    for (int i = 0; i < argc; i++) {
-        NSLog(@"argv[%d]: %s", i, argv[i]);
-    }
-    
     return qfe::run(1, argv);
 }
 
+
 - (int)loadProject:(nonnull NSString *)path zoomToProject:(BOOL)zoom absolutePath:(BOOL)absolute {
     const char *cpath = [path fileSystemRepresentation];
+	const char *absolutePath = strdup([path UTF8String]);
+
 	return qfe::loadProject(cpath, zoom, absolute);
 }
 
@@ -38,8 +36,8 @@
 
 
 
-- (int)widget:(UIView *)nativeController {
-    qfe::widget(nativeController);
+- (int)widget:(UIView *)view {
+    qfe::widget(view);
 }
 
 
@@ -60,7 +58,7 @@
  * @return JSON array of result set IDs: "[2001, 2002, ...]"
  */
 - (NSString *)getActiveResultSets {
-	const char *cString =  qfe::getActiveResultSets();
+	const char *cString = qfe::getActiveResultSets();
 	NSString *string = [NSString stringWithUTF8String:cString];
 	return string;
 }
@@ -542,7 +540,6 @@ static void jsonCallback(const char *json) {
 	if (_jsonCompletion) {
 		NSString *result = json ? [NSString stringWithUTF8String:json] : nil;
 		_jsonCompletion(result);
-		_jsonCompletion = nil;
 	}
 }
 
@@ -568,7 +565,6 @@ static void (^_resultSetCompletion)(RESULTSET_ID resultSetId);
 static void resultSetCallback(RESULTSET_ID resultSetId) {
 	if (_resultSetCompletion) {
 		_resultSetCompletion(resultSetId);
-		_resultSetCompletion = nil;
 	}
 }
 

@@ -11,16 +11,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface QFieldWrapper : NSObject
+@interface QFieldMap : NSObject
 
 typedef int CANVAS_ID;
 typedef int RESULTSET_ID;
 
 - (int) bootQField;
 - (int) runQField;
-- (int) widget:(UIView *)nativeController;
+- (int) widget:(UIView *)view;
 - (int) loadProject:(NSString *)path zoomToProject:(bool)zoom absolutePath:(bool)absolute;
 
+- (CANVAS_ID)allCanvases;
 - (NSString *)getActiveResultSets;
 - (void) closeResultSet:(RESULTSET_ID)resultSetId;
 - (NSString *)getResultSetMetadata:(RESULTSET_ID) resultSetId;

@@ -12,6 +12,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "QField",
+			type: .dynamic,
             targets: ["QField"]),
     ],
     targets: [
@@ -28,8 +29,11 @@ let package = Package(
             dependencies: [
                 .target(name: "QFieldEmbedded")
             ],
-            path: "Sources/QFieldWrapper",
+            path: "Sources/QFieldMap",
             publicHeadersPath: ".",
+			linkerSettings: [
+				.linkedFramework("Foundation")
+			]
         ),
     ]
 )
