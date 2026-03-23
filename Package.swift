@@ -12,7 +12,6 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "QField",
-			type: .dynamic,
             targets: ["QField"]),
     ],
     targets: [
@@ -20,8 +19,8 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .binaryTarget(
             name: "QFieldEmbedded",
-            url: "https://github.com/K3V-Solutions/QField-Swift-Package/releases/download/0.0.4/QFieldEmbedded.xcframework.zip",
-            checksum: "8363f5ba961d3a0129a660ea009a60c8242045210447e0ef4434ac112de8c549"
+            url: "https://github.com/K3V-Solutions/QField-Swift-Package/releases/download/0.0.6/QFieldEmbedded.xcframework.zip",
+            checksum: "ea4422404fa73164e135cf1de64f86682f520b395ababe1f185efd989381a3c8"
         ),
         
         .target(
