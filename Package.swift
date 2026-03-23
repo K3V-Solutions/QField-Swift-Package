@@ -20,7 +20,7 @@ let package = Package(
         .binaryTarget(
             name: "QFieldEmbedded",
             url: "https://github.com/K3V-Solutions/QField-Swift-Package/releases/download/0.0.7/QFieldEmbedded.xcframework.zip",
-            checksum: "7d4ddfb197f489b84e5991ce16529635b420e8570e681137fc097268797ba785"
+            checksum: "ab7e9a62e6830f5073aec50432d95fad36c18ad40e482de2d5c6ffe19ec49317"
         ),
         
         .target(
