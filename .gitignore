@@ -7,3 +7,4 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 QFieldEmbedded
+Framework/QFieldEmbedded.xcframework/

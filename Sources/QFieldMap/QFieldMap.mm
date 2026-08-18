@@ -88,8 +88,9 @@
 
 // MARK: - ============ Layer Management ============
 
-- (int)addLayerRoot:(nonnull char *)layerPath absolutePath:(bool)absolute {
-	qfe::addLayerRoot(layerPath, absolute);
+- (int)addLayerRoot:(nonnull NSString *)layerPath absolutePath:(bool)absolute {
+	const char *cPath = [layerPath fileSystemRepresentation];
+	qfe::addLayerRoot(cPath, absolute);
 }
 
 
@@ -300,6 +301,48 @@ static void resultSetCallback(RESULTSET_ID resultSetId) {
 
 
 
+- (void)registerCanvasExtentChangedCallback:(int)canvasId completion:(void (^)(int canvasId, NSString *stateJson))completion {
+	_canvasExtentChangedCompletion = [completion copy];
+	qfe::registerCanvasExtentChangedCallback(canvasId, canvasExtentChangedCallback);
+}
+
+static void (^_canvasExtentChangedCompletion)(int canvasId, NSString *stateJson);
+static void canvasExtentChangedCallback(int canvasId, const char* stateJson) {
+	if (_canvasExtentChangedCompletion) {
+		NSString *state = stateJson ? [NSString stringWithUTF8String:stateJson] : nil;
+		_canvasExtentChangedCompletion(canvasId, state);
+	}
+}
+
+
+
+- (void)registerCanvasRenderingChangedCallback:(int)canvasId completion:(void (^)(int canvasId, bool isRendering))completion {
+	_canvasRenderingChangedCompletion = [completion copy];
+	qfe::registerCanvasRenderingChangedCallback(canvasId, canvasRenderingChangedCallback);
+}
+
+static void (^_canvasRenderingChangedCompletion)(int canvasId, bool isRendering);
+static void canvasRenderingChangedCallback(int canvasId, bool isRendering) {
+	if (_canvasRenderingChangedCompletion) {
+		_canvasRenderingChangedCompletion(canvasId, isRendering);
+	}
+}
+
+
+
+- (void)registerRuntimeBusyChangedCallback:(void (^)(bool busy))completion {
+	_runtimeBusyChangedCompletion = [completion copy];
+	qfe::registerRuntimeBusyChangedCallback(runtimeBusyChangedCallback);
+}
+
+static void (^_runtimeBusyChangedCompletion)(bool busy);
+static void runtimeBusyChangedCallback(bool busy) {
+	if (_runtimeBusyChangedCompletion) {
+		_runtimeBusyChangedCompletion(busy);
+	}
+}
+
+
 // MARK: - ============ Virtual Layer ============
 
 - (nonnull NSString *)addVirtualLayer:(nonnull NSString *)query name:(nonnull NSString *)name stylePath:(nonnull NSString *)stylePath absolute:(bool)absolute {
@@ -325,5 +368,112 @@ static void resultSetCallback(RESULTSET_ID resultSetId) {
 	const char *stylePathChars = strdup([stylePath UTF8String]);
 	qfe::setVirtualLayerStyle(layerIdChars, stylePathChars, absolute);
 }
+
+
+
+
+// MARK: - ============ Feature Selection ============
+
+/**
+ * @brief Selects features in a vector layer by their feature IDs.
+ *
+ * Selected features are highlighted in the layer's selection color on every
+ * canvas displaying the layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @param fidsJson JSON array of feature IDs, e.g. "[1,2,3]"
+ * @param behavior Selection behavior: 0=Set, 1=Add, 2=Intersect, 3=Remove
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) selectFeatures:(nonnull NSString *) layerId fidsJson:(NSString *) fidsJson behavior:(int) behavior {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	const char *fidsJsonChars = strdup([fidsJson UTF8String]);
+	return qfe::selectFeatures(layerIdChars, fidsJsonChars, behavior);
+}
+
+/**
+ * @brief Selects features in a vector layer matching a QGIS expression.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @param expression QGIS expression (e.g. "status = 'open'")
+ * @param behavior Selection behavior: 0=Set, 1=Add, 2=Intersect, 3=Remove
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) selectFeaturesByExpression:(nonnull NSString *) layerId fidsJson:(nonnull NSString *) fidsJson behavior:(int) behavior {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	const char *fidsJsonChars = strdup([fidsJson UTF8String]);
+	return qfe::selectFeaturesByExpression(layerIdChars, fidsJsonChars, behavior);
+}
+
+/**
+ * @brief Selects all features in a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) selectAllFeatures:(nonnull NSString*) layerId {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	return qfe::selectAllFeatures(layerIdChars);
+}
+
+/**
+ * @brief Inverts the selection of a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) invertSelection:(nonnull NSString*) layerId {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	return qfe::invertSelection(layerIdChars);
+}
+
+/**
+ * @brief Clears the selection of a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) clearSelection:(nonnull NSString*) layerId {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	return qfe::clearSelection(layerIdChars);
+}
+
+/**
+ * @brief Gets the IDs of the selected features in a vector layer as JSON.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return JSON object {"type":"SelectedFeatures","layerId":...,"count":N,"fids":[...]}, or empty string on error
+ */
+- (nonnull NSString *) getSelectedFeatureIds:(NSString*) layerId {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	const char *featureIds = qfe::getSelectedFeatureIds(layerIdChars);
+	NSString *string = [NSString stringWithUTF8String:featureIds];
+	return string;
+
+}
+
+/**
+ * @brief Gets the number of selected features in a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return Selected feature count, or -1 on error
+ */
+- (int) getSelectedFeatureCount:(nonnull NSString*) layerId {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	return qfe::getSelectedFeatureCount(layerIdChars);
+}
+
+/**
+ * @brief Zooms a canvas to the bounding box of the selected features of a layer.
+ *
+ * @param canvasId The ID of the canvas to zoom, or ALL_CANVASES
+ * @param layerId The QGIS layer ID of the target vector layer
+ */
+- (void) zoomCanvasToSelection:(int) canvasId layerId:(nonnull NSString*)layerId {
+	const char *layerIdChars = strdup([layerId UTF8String]);
+	qfe::zoomCanvasToSelection(canvasId, layerIdChars);
+}
+
+
 
 @end

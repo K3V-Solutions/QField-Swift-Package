@@ -17,12 +17,14 @@ let package = Package(
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
+		.binaryTarget(name: "QFieldEmbedded", path: "Framework/QFieldEmbedded.xcframework"),
+		/*
         .binaryTarget(
             name: "QFieldEmbedded",
-            url: "https://github.com/K3V-Solutions/QField-Swift-Package/releases/download/0.0.8/QFieldEmbedded.xcframework.zip",
-            checksum: "ab7e9a62e6830f5073aec50432d95fad36c18ad40e482de2d5c6ffe19ec49317"
+            url: "https://github.com/K3V-Solutions/QField-Swift-Package/releases/download/0.0.9/QFieldEmbedded.xcframework.zip",
+            checksum: "d24eb5a38b61269b70064ccb1f596970b101d5a90db48b9ec01cea42f83540af"
         ),
-        
+        */
         .target(
             name: "QField",
             dependencies: [

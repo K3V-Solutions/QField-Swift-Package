@@ -86,6 +86,27 @@ typedef int RESULTSET_ID;
 
 
 /**
+ * @brief Reloads the currently loaded project from disk (re-reads the .qgs/.qgz file).
+ *
+ * Use when the project file or its source files changed structurally. Heavier
+ * than reloadAllLayers().
+ *
+ * @param zoomToProject Whether to re-zoom to the project extent (false preserves the current view)
+ * @return 0 on success, non-zero error code on failure (e.g. no project loaded)
+ */
+int reloadProject(bool zoomToProject);
+
+/**
+ * @brief Reloads every layer's data provider project-wide (QgsProject::reloadAllLayers()).
+ *
+ * Use when a source file's data changed. Lighter than reloadProject() and preserves the view.
+ *
+ * @return 0 on success, non-zero error code on failure (e.g. no project loaded)
+ */
+int reloadAllLayers();
+
+
+/**
  * @brief Special constant representing all active canvases.
  *
  * Pass this value to single-canvas functions to apply the operation to all canvases.
@@ -163,7 +184,7 @@ typedef int RESULTSET_ID;
  * @param absolutePath Whether the layerPath is absolute (true) or relative to app bundle (false)
  * @return 0 on success, non-zero error code on failure
  */
-- (NSInteger) addLayerRoot:(char *)layerPath absolutePath:(bool)absolute;
+- (int) addLayerRoot:(NSString *)layerPath absolutePath:(bool)absolute;
 
 
 /**
@@ -178,7 +199,7 @@ typedef int RESULTSET_ID;
  * @param absolutePath Whether the layerPath is absolute (true) or relative to app bundle (false)
  * @return 0 on success, non-zero error code on failure
  */
-- (NSInteger) addLayerGroup:(NSString *)layerPath expression:(NSString *)expression absolutePath:(bool)absolute;
+- (int) addLayerGroup:(NSString *)layerPath expression:(NSString *)expression absolutePath:(bool)absolute;
 
 
 /**
@@ -473,6 +494,35 @@ typedef int RESULTSET_ID;
 
 
 
+// ============ Canvas Listeners ============
+
+/**
+ * @brief Registers a callback fired on every map interaction (pan/zoom/move/scale/rotate).
+ *
+ * @param canvasId The ID of the canvas to observe, or ALL_CANVASES
+ * @param callback Function pointer called with (canvasId, CanvasState JSON)
+ */
+- (void)registerCanvasExtentChangedCallback:(int)canvasId completion:(void (^)(int canvasId, NSString *stateJson))completion;
+
+
+/**
+ * @brief Registers a callback fired when a canvas starts or finishes rendering.
+ *
+ * @param canvasId The ID of the canvas to observe, or ALL_CANVASES
+ * @param callback Function pointer called with (canvasId, isRendering)
+ */
+- (void)registerCanvasRenderingChangedCallback:(int)canvasId completion:(void (^)(int canvasId, bool isRendering))completion;
+
+
+/**
+ * @brief Registers a callback fired when the runtime transitions between busy and idle.
+ *
+ * @param callback Function pointer called with (busy)
+ */
+- (void)registerRuntimeBusyChangedCallback:(void (^)(bool busy))completion;
+
+
+
 // ============ Virtual Layer Management ============
 
 /**
@@ -497,7 +547,7 @@ typedef int RESULTSET_ID;
  * @param layerId The layer ID (as returned by addVirtualLayer or getLayerId)
  * @return 0 on success, non-zero error code on failure
  */
-- (NSInteger) removeVirtualLayer:(NSString *)layerId;
+- (int) removeVirtualLayer:(NSString *)layerId;
 
 
 /**
@@ -510,7 +560,7 @@ typedef int RESULTSET_ID;
  * @param query New SQL query for the virtual layer
  * @return 0 on success, non-zero error code on failure
  */
-- (NSInteger) setVirtualLayerSql:(NSString *)layerId query:(NSString *)query;
+- (int) setVirtualLayerSql:(NSString *)layerId query:(NSString *)query;
 
 
 /**
@@ -521,7 +571,82 @@ typedef int RESULTSET_ID;
  * @param absolutePath Whether the stylePath is absolute (true) or relative to app bundle (false)
  * @return 0 on success, non-zero error code on failure
  */
-- (NSInteger) setVirtualLayerStyle:(NSString *)layerId stylePath:(NSString *)stylePath absolute:(bool)absolute;
+- (int) setVirtualLayerStyle:(NSString *)layerId stylePath:(NSString *)stylePath absolute:(bool)absolute;
+
+
+
+// ============ Feature Selection ============
+
+/**
+ * @brief Selects features in a vector layer by their feature IDs.
+ *
+ * Selected features are highlighted in the layer's selection color on every
+ * canvas displaying the layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @param fidsJson JSON array of feature IDs, e.g. "[1,2,3]"
+ * @param behavior Selection behavior: 0=Set, 1=Add, 2=Intersect, 3=Remove
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) selectFeatures:(NSString *) layerId fidsJson:(NSString *)fidsJson behavior:(int)behavior;
+
+/**
+ * @brief Selects features in a vector layer matching a QGIS expression.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @param expression QGIS expression (e.g. "status = 'open'")
+ * @param behavior Selection behavior: 0=Set, 1=Add, 2=Intersect, 3=Remove
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) selectFeaturesByExpression:(NSString *) layerId fidsJson:(NSString *)fidsJson behavior:(int) behavior;
+
+/**
+ * @brief Selects all features in a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) selectAllFeatures:(NSString *) layerId;
+
+/**
+ * @brief Inverts the selection of a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) invertSelection:(NSString *) layerId;
+
+/**
+ * @brief Clears the selection of a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return 0 on success, non-zero error code on failure
+ */
+- (int) clearSelection:(NSString *) layerId;
+
+/**
+ * @brief Gets the IDs of the selected features in a vector layer as JSON.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return JSON object {"type":"SelectedFeatures","layerId":...,"count":N,"fids":[...]}, or empty string on error
+ */
+- (NSString *) getSelectedFeatureIds:(NSString *) layerId;
+
+/**
+ * @brief Gets the number of selected features in a vector layer.
+ *
+ * @param layerId The QGIS layer ID of the target vector layer
+ * @return Selected feature count, or -1 on error
+ */
+- (int) getSelectedFeatureCount:(NSString *) layerId;
+
+/**
+ * @brief Zooms a canvas to the bounding box of the selected features of a layer.
+ *
+ * @param canvasId The ID of the canvas to zoom, or ALL_CANVASES
+ * @param layerId The QGIS layer ID of the target vector layer
+ */
+- (void) zoomCanvasToSelection:(int) canvasId layerId:(NSString*) layerId;
 
 
 @end
