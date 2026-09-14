@@ -31,7 +31,7 @@
 
 
 - (bool)bootQField {
-    return qfe::boot(true) == 0;
+    return qfe::boot(false) == 0;
 }
 
 
@@ -46,6 +46,23 @@
 	return qfe::ALL_CANVASES;
 }
 
+
+- (int)reloadProject:(bool)zoomToProject {
+	return qfe::reloadProject(zoomToProject);
+}
+
+
+- (int)reloadAllLayers {
+	return qfe::reloadAllLayers();
+}
+
+- (void)refreshCanvas:(CANVAS_ID)canvasId {
+	return qfe::refreshCanvas(canvasId);
+}
+
+- (void)refreshCanvasallLayers:(CANVAS_ID)canvasId {
+	return qfe::refreshCanvasAllLayers(canvasId);
+}
 
 
 // MARK: - ============ Result Set API (Cursor Pattern) ============

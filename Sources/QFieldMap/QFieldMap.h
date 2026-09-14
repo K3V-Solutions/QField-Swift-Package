@@ -294,6 +294,24 @@ int reloadAllLayers();
 
 
 /**
+ * @brief Redraws a canvas using the cached layer data.
+ *
+ * @param canvasId The ID of the canvas to refresh, or allCanvases
+ */
+- (void) refreshCanvas:(CANVAS_ID)canvasId;
+
+
+/**
+ * @brief Redraws a canvas and re-reads all layers from their sources.
+ *
+ * Heavier than refreshCanvas:.
+ *
+ * @param canvasId The ID of the canvas to refresh, or allCanvases
+ */
+- (void) refreshCanvasallLayers:(CANVAS_ID)canvasId;
+
+
+/**
  * @brief Gets the center point of a specific canvas as JSON.
  *
  * Returns a JSON string containing the center coordinates and CRS of the canvas.
